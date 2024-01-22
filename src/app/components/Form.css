@@ -1,0 +1,13 @@
+.peopleForm {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    width: 300px;
+    justify-content: space-between;
+    height: 280px;
+}
+
+.peopleFormTitle {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
