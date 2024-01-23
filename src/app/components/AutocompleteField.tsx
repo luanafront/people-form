@@ -8,11 +8,10 @@ interface Props {
   isOptionEqualToValue: (option: object, value: object) => boolean;
   getOptionLabel: (option: object) => string;
   options: object[];
-  loading: boolean;
   renderInput: (params: object) => ReactElement;
   control: Control<FormData>;
   controlName: 'people' | 'phone' | 'email';
-  onChanger: (onChange: (value: {name: string} | null) => void) => (event: SyntheticEvent<Element, Event>, value: object | null) => void;
+  onChanger: (onChange: (value: {id: number} | null) => void) => (event: SyntheticEvent<Element, Event>, value: object | null) => void;
 }
 
 const AutocompleteField = (props: Props) => {

@@ -2,9 +2,10 @@ import {useForm} from 'react-hook-form';
 import React from 'react';
 import {FormData, People} from '@/app/components/@types';
 import {peoplesMock} from '@/app/mock';
-import {Alert, AutocompleteRenderInputParams, Button, CircularProgress, Snackbar, TextField} from '@mui/material';
+import {Alert, AutocompleteRenderInputParams, Button, Snackbar, TextField} from '@mui/material';
 import AutocompleteField from '@/app/components/AutocompleteField';
 import './Form.css';
+import {debounce} from '@/app/debounce';
 
 export const Form = () => {
   const {
@@ -19,10 +20,22 @@ export const Form = () => {
     },
   });
   const [peoples, setPeoples] = React.useState<People[]>([]);
+  const [peopleSearch, setPeopleSearch] = React.useState<string>('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = React.useState(peopleSearch);
+
+  const debouncedSetPeopleSearch = debounce((searchTerm: string) => {
+    setDebouncedSearchTerm(searchTerm);
+  }, 500);
 
   React.useEffect(() => {
-    setPeoples(peoplesMock);  // Simulação de uma requisição
-  }, []);
+    if(debouncedSearchTerm) {
+      setPeoples(peoplesMock.filter((people) =>
+        people.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      ));
+    } else {
+      setPeoples([]);
+    }
+  }, [debouncedSearchTerm]);
 
   const renderInput = (params: object) => (
     <TextField
@@ -30,12 +43,12 @@ export const Form = () => {
       label="Pessoa"
       InputProps={{
         ...(params as AutocompleteRenderInputParams).InputProps,
-        endAdornment: (
-          <>
-            {peoples.length === 0 ? <CircularProgress color="inherit" size={20}/> : null}
-            {(params as AutocompleteRenderInputParams).InputProps.endAdornment}
-          </>
-        ),
+      }}
+      value={peopleSearch}
+      error={!!errors.people}
+      onChange={(event) => {
+        setPeopleSearch(event.target.value);
+        debouncedSetPeopleSearch(event.target.value);
       }}
     />
   );
@@ -75,13 +88,12 @@ export const Form = () => {
           isOptionEqualToValue={(option, value) => (option as People).name === (value as People).name}
           getOptionLabel={(option) => (option as People).name}
           options={peoples}
-          loading={peoples.length === 0}
           renderInput={renderInput}
           control={control}
           controlName="people"
-          onChanger={(onChange: (value: { name: string } | null) => void) => (_event, value: any) => {
+          onChanger={(onChange: (value: { id: number } | null) => void) => (_event, value: any) => {
             if (value) {
-              onChange(value.name);
+              onChange(value.id);
             } else {
               onChange(null);
             }
@@ -91,13 +103,13 @@ export const Form = () => {
           label="Telefone"
           type="tel"
           error={!!errors.phone}
-          {...register('phone', {required: 'O campo de telefone é obrigatório', minLength: {value: 10, message: 'Telefone inválido'}, maxLength: 11, pattern: /^[0-9]+$/i})}
+          {...register('phone', {required: 'O campo de telefone é obrigatório', minLength: {value: 10, message: 'Telefone inválido'}, maxLength: 11, pattern: {value: /^[0-9]+$/, message: 'Telefone inválido'}})}
         />
         <TextField
           label="E-Mail"
           type="email"
           error={!!errors.email}
-          {...register('email', {required: 'O campo de email é obrigatório', pattern: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/i})}
+          {...register('email', {required: 'O campo de email é obrigatório', pattern: {value: /^[a-z0-9.]+@[a-z0-9]+\.[a-z]+(\.[a-z]+)?$/i, message: 'Email inválido'}})}
         />
         <Button type="submit" variant="contained">Enviar</Button>
       </form>
